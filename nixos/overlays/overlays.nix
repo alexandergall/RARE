@@ -91,6 +91,7 @@ let
       bmv2 = super.callPackage ./bmv2 { };
       p4c = super.callPackage ./p4c { };
       p4runtime = super.callPackage ./p4runtime { };
+      bf-sde = super.callPackage ./bf-sde { };
 
     };
 in [ overlay1 ]

@@ -2,6 +2,10 @@ let
   grpc_version = "1.17.2";
   overlay1 = self: super:
     {
+      libpcap_1_8 = super.libpcap.overrideAttrs(oldAttrs: rec {
+        version = "1.8";
+        name = "libpcap-${version}";
+      });
       grpc = super.grpc.overrideAttrs(oldAttrs: rec {
 	version = grpc_version;
 	name = "grpc-${version}";
@@ -61,6 +65,37 @@ let
 	    };
 	  });
 
+	  ## Needed by bf-diags
+	  jsl = python-super.buildPythonPackage rec {
+	    pname = "jsl";
+	    version = "0.2.4";
+	    name = "${pname}-${version}";
+
+	    src = python-super.fetchPypi {
+	      inherit pname version;
+	      sha256 = "17f14h2aj05hcwc5p1600s5n33fhfsjig7id5gqhixbgdc8j29i2";
+	    };
+	  };
+
+          ## tenjin.py is included in the bf-drivers packages and
+          ## installed in
+          ## SDE_INSTALL/lib/python2.7/site-packages/tofino_pd_api/.
+          ## The module is used to build bf-diags, but it appears to
+          ## have a bug which causes the build to fail. Inspection of
+          ## a working build environment on ONL reveals that the
+          ## module is actually overridden by tenjin from
+          ## /usr/local/lib. We do the same here.
+	  tenjin = python-super.buildPythonPackage rec {
+	    pname = "Tenjin";
+	    version = "1.1.1";
+	    name = "${pname}-${version}";
+
+	    src = python-super.fetchPypi {
+	      inherit pname version;
+	      sha256 = "15s681770h7m9x29kvzrqwv20ncg3da3s9v225gmzz60wbrl9q55";
+	    };
+	  };
+	  
 	  nnpy = python-super.buildPythonPackage rec {
 	    pname = "nnpy-python";
 	    version = "1.4.2";
@@ -91,7 +126,10 @@ let
       bmv2 = super.callPackage ./bmv2 { };
       p4c = super.callPackage ./p4c { };
       p4runtime = super.callPackage ./p4runtime { };
-      bf-sde = super.callPackage ./bf-sde { };
+      bf-sde = super.callPackage ./bf-sde {
+        ## gcc 7 crashes when compiling parts of bf-diags
+        ## stdenv = super.overrideCC super.stdenv super.gcc6;
+      };
 
     };
 in [ overlay1 ]

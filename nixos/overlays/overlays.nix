@@ -17,10 +17,7 @@ let
       linuxCustom =
         let
 	  inherit (self) sde-builder;
-          configfile = builtins.path {
-            name = "linux-config-RARE";
-            path = "/home/gall/kernel_config.orig";
-          };
+          configfile = sde-builder.kernelConfig;
           inherit (import (super.runCommand "get-local-version"
             { preferLocalBuild = true;
               allowSubstitutes = false;

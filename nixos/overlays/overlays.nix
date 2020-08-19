@@ -16,8 +16,11 @@ let
     {
       linuxCustom =
         let
-	  inherit (self) sde-builder;
-          configfile = sde-builder.kernelConfig;
+	  inherit (self.sde-builder) kernelVersion kernelHash inputPath;
+          configfile = builtins.path {
+            name = "custom-kernel-config";
+            path = inputPath + "/kernel-config";
+          };
           inherit (import (super.runCommand "get-local-version"
             { preferLocalBuild = true;
               allowSubstitutes = false;
@@ -25,8 +28,8 @@ let
             ''
               set -e
               version=$(grep 'Linux.*Kernel Configuration' ${configfile} | cut -d' ' -f 3)
-	      if ! [ "$version" == "${sde-builder.kernelVersion}" ]; then
-	        echo "Kernel configuration version does not match requested version ($version vs ${sde-builder.kernelVersion}"
+	      if ! [ "$version" == "${kernelVersion}" ]; then
+	        echo "Kernel configuration version does not match requested version ($version vs ${kernelVersion}"
 		exit 1
 	      fi
               localVersion=$(grep LOCALVERSION= ${configfile} | cut -d\" -f2)
@@ -39,7 +42,7 @@ let
             modDirVersion = "${version}${localVersion}";
             src = super.fetchurl {
               url = "mirror://kernel/linux/kernel/v4.x/linux-${version}.tar.xz";
-	      sha256 = sde-builder.kernelHash;
+	      sha256 = kernelHash;
             };
             kernelPatches = [];
             config = { CONFIG_MODULES = "y"; };
@@ -47,8 +50,10 @@ let
 
       ## Newer versions of curl don't understand the standard
       ## notation of IPv6 scope identifiers with link-local addresses
-      ## as used by the bf-platforms SDE sub-package.
-      curl = super.curl.overrideAttrs(oldAttrs: rec {
+      ## as used by the bf-platforms SDE sub-package.  We don't override
+      ## the standard package to avoid massive amounts of re-building of
+      ## packages that depend on it.
+      curl_7_52 = super.curl.overrideAttrs(oldAttrs: rec {
         name = "curl-7.52.0";
         ## fetchurlBoot is needed to break a dependency cycle with zlib
         src = self.stdenv.fetchurlBoot {

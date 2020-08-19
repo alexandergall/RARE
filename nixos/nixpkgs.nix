@@ -4,25 +4,20 @@ import ./nixpkgs {
         {
           sde-builder = rec {
             sdeVersion = "9.1.1";
-            sdeTarball = builtins.path rec {
-              name = "bf-sde-${sdeVersion}.tar";
-              path = ./bf-sde + "/${name}";
-            };
-            sdeToolsTarball = builtins.path {
-              name = "bf-sde-tools.tar";
-              path = ./bf-sde/ba-102-tools-2019-09-09.tar;
-            };
-            bspTarball = builtins.path rec {
-              name = "bf-reference-bsp-${sdeVersion}.tar";
-              path = ./bf-sde + "/${name}";
-            };
-            kernelConfig = builtins.path {
-              name = "custom-kernel-config";
-              path = ./bf-sde/kernel-config;
-            };
+
             kernelVersion = "4.14.151";
-            ## nix-prefetch-url  http://cdn.kernel.org/pub/linux/kernel/v4.x/linux-<kernel-version>.tar.xz 
+            ## Determine the hash with:
+            ## nix-prefetch-url  http://cdn.kernel.org/pub/linux/kernel/v4.x/linux-<kernelVersion>.tar.xz 
             kernelHash = "1bizb1wwni5r4m5i0mrsqbc5qw73lwrfrdadm09vbfz9ir19qlgz";
+
+            ### Location of the directory that contains the inputs to the build:
+            ## bf-sde-<sdeVersion>.tar
+            ## bf-reference-bsp-<sdeVersion>.tar
+            ## tools.tar (Barefoot Academy tools)
+            ## kernel-config
+            ### The kernel configuration can be copied from a
+            ### running system with "zcat /proc/config.gz"
+            inputPath = ./bf-sde-build-input;
           };
         })
     ] ++ import ./overlays/overlays.nix;

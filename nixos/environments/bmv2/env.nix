@@ -1,4 +1,4 @@
-with import ./nixpkgs.nix;
+with import ../../nixpkgs.nix;
 
 stdenv.mkDerivation rec {
   name = "bmv2-environment";

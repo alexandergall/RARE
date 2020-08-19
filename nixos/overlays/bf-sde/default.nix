@@ -2,10 +2,22 @@
 
 { sde-builder, stdenv, writeText, gmp, glibc, python, python3, linuxCustom,
   pythonPackages, pkg-config, file, thrift, openssl, boost, grpc,
-  protobuf, zlib, libpcap_1_8, libusb, curl }:
+  protobuf, zlib, libpcap_1_8, libusb, curl_7_52 }:
 
 let
-    inherit (sde-builder) sdeVersion sdeTarball sdeToolsTarball bspTarball;
+    inherit (sde-builder) sdeVersion inputPath;
+    sdeTarball = builtins.path rec {
+      name = "bf-sde-${sdeVersion}.tar";
+      path = inputPath + "/${name}";
+    };
+    sdeToolsTarball = builtins.path {
+      name = "bf-sde-tools.tar";
+      path = inputPath + "/tools.tar";
+    };
+    bspTarball = builtins.path rec {
+      name = "bf-reference-bsp-${sdeVersion}.tar";
+      path = inputPath + "/${name}";
+    };
     profile = writeText "bf-studio-profile"
       ''
       # SDE_VERSION : ${sdeVersion}
@@ -43,7 +55,7 @@ in stdenv.mkDerivation rec {
                   ## bf-diags
                   libpcap_1_8
                   ## bf-platforms
-                  libusb curl ] ++
+                  libusb curl_7_52 ] ++
                 (with pythonPackages; [ pip pyyaml six packaging jsl jsonschema tenjin ]);
 
   buildPhase = ''
